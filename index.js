@@ -1,9 +1,28 @@
 const express = require("express");
+const mongoose = require("mongoose");
+const cookieSession = require("cookie-session");
+const passport = require("passport");
+const keys = require("./config/keys");
+require("./models/User");
+require("./services/passport");
+
+mongoose.connect(keys.mongoURI);
+
+const authRoutes = require("./routes/authRoutes");
+
 const app = express(); // generates a new running express app
 
-app.get("/", (req, res) => {
-  res.send({ hi: "there" });
-});
+// middleware - small functions used to modify incoming requests to our app before they are sent off to route handlers
+app.use(
+  cookieSession({
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    keys: [keys.cookieKey],
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+authRoutes(app);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT);
